@@ -1,0 +1,7 @@
+Audio File: 001001.mp3
+Predicted Text: بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمم
+Reference Text: بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
+Similarity Score: 91
+Classification: pass
+Pass Count: 1 (100.00%)
+Fail Count: 0 (0.00%)

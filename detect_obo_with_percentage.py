@@ -10,7 +10,6 @@ from fuzzywuzzy import fuzz
 AUDIO_DIRECTORY = "audio"
 TEXT_DIRECTORY = "text"
 SIMILARITY_THRESHOLD = 80  # Set your similarity threshold here
-REPORT_FILE = "report.txt"  # Name of the report file
 
 loaded_model = None
 loaded_processor = None
@@ -43,19 +42,19 @@ def classify_similarity(similarity):
         return "fail"
 
 def main():
+    total_files = 0
+    pass_count = 0
+    fail_count = 0
     if not os.path.exists(AUDIO_DIRECTORY) or not os.path.exists(TEXT_DIRECTORY):
         print("Audio or text directory does not exist")
         return
 
     loaded_model, loaded_processor = load_model()  # Load the model
 
-    pass_count = 0
-    fail_count = 0
-
     # Get a sorted list of audio filenames
     audio_filenames = sorted(os.listdir(AUDIO_DIRECTORY))
 
-    with open(REPORT_FILE, "w") as report:
+    with open("report.txt", "w") as report_file:
         for audio_filename in audio_filenames:
             audio_file_path = os.path.join(AUDIO_DIRECTORY, audio_filename)
             text_filename = os.path.splitext(audio_filename)[0] + ".txt"
@@ -63,44 +62,39 @@ def main():
 
             if not os.path.exists(text_file_path):
                 print(f"Text file for {audio_filename} not found.")
-                report.write(f"Text file for {audio_filename} not found.\n")
                 continue
 
             predicted_text = predict_sound_file(audio_file_path, loaded_model, loaded_processor)
             reference_text = load_text_file(text_file_path)
             similarity = fuzz.ratio(predicted_text, reference_text)
 
+            report_file.write(f"Audio File: {audio_filename}\n")
+            report_file.write(f"Predicted Text: {predicted_text}\n")
+            report_file.write(f"Reference Text: {reference_text}\n")
+            report_file.write(f"Similarity Score: {similarity}\n")
+            
             print(f"Audio File: {audio_filename}")
             print(f"Predicted Text: {predicted_text}")
             print(f"Reference Text: {reference_text}")
             print(f"Similarity Score: {similarity}")
 
+
             classification = classify_similarity(similarity)
-            print(f"Classification: {classification}")
+            report_file.write(f"Classification: {classification}\n")
 
-            if classification == "pass":
-                pass_count += 1
-            else:
-                fail_count += 1
+            total_files += 1
 
-            # Write the results to the report file
-            report.write(f"Audio File: {audio_filename}\n")
-            report.write(f"Predicted Text: {predicted_text}\n")
-            report.write(f"Reference Text: {reference_text}\n")
-            report.write(f"Similarity Score: {similarity}\n")
-            report.write(f"Classification: {classification}\n")
+            pass_count += 1 if classification == "pass" else 0
+            fail_count += 1 if classification == "fail" else 0
 
-    total_files = pass_count + fail_count
+            pass_percentage = (pass_count / total_files) * 100
+            fail_percentage = (fail_count / total_files) * 100
 
-    pass_percentage = (pass_count / total_files) * 100
-    fail_percentage = (fail_count / total_files) * 100
-
-    print(f"Pass Count: {pass_count} ({pass_percentage:.2f}%)")
-    print(f"Fail Count: {fail_count} ({fail_percentage:.2f}%)")
-
-    # Write the pass and fail counts to the report file
-    report.write(f"Pass Count: {pass_count} ({pass_percentage:.2f}%)\n")
-    report.write(f"Fail Count: {fail_count} ({fail_percentage:.2f}%)\n")
+            report_file.write(f"Pass Count: {pass_count} ({pass_percentage:.2f}%)\n")
+            report_file.write(f"Fail Count: {fail_count} ({fail_percentage:.2f}%)\n")
+            
+            print(f"Pass Count: {pass_count} ({pass_percentage:.2f}%)")
+            print(f"Fail Count: {fail_count} ({fail_percentage:.2f}%)")
 
 if __name__ == "__main__":
     main()
